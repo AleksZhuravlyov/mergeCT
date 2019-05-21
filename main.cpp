@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <fstream>
 
 #include <boost/program_options.hpp>
 
@@ -7,7 +8,7 @@
 
 namespace po = boost::program_options;
 
-const std::string VERSION = "1.0";
+const std::string VERSION = "1.1";
 
 
 int main(int argc, char **argv) {
@@ -20,6 +21,8 @@ int main(int argc, char **argv) {
                 ("help,h", "Display help message")
 
                 ("version,v", "Display version")
+
+                ("config", po::value<std::string>(), "Config file")
 
                 ("variable,var",
                  po::value<std::string>()->default_value("tomo"),
@@ -38,18 +41,21 @@ int main(int argc, char **argv) {
                  "Input files list (positional option)");
 
 
-        po::positional_options_description positionalDescription;
-        positionalDescription.add("input", -1);
-        po::variables_map variables;
+        po::positional_options_description posDescription;
+        posDescription.add("input", -1);
+
+        po::variables_map varMap;
 
 
         try {
 
-            po::store(po::command_line_parser(argc, argv).options(
-                    description).positional(positionalDescription).run(),
-                      variables);
+            po::command_line_parser clParser(argc, argv);
+            clParser.options(description).positional(posDescription);
+            po::parsed_options parsedOptions = clParser.run();
+            po::store(parsedOptions, varMap);
 
-            if (variables.count("help")) {
+            if (varMap.count("help")) {
+
                 std::cout << "The utility name is MergeCT." << std::endl
                           << "Functionality is "
                           << "merging raw microCT UNSW nc files." << std::endl
@@ -58,15 +64,26 @@ int main(int argc, char **argv) {
                           << "Record (merge) dimension is lvl(z)." << std::endl
                           << description;
                 return EXIT_SUCCESS;
-            } else if (variables.count("version")) {
+
+            } else if (varMap.count("version")) {
+
                 std::cout << "MergeCT version is " << VERSION << std::endl;
                 return EXIT_SUCCESS;
-            } else if (!variables.count("input")) {
+
+            } else if (varMap.count("config")) {
+
+                std::ifstream ifs{varMap["config"].as<std::string>().c_str()};
+                if (ifs)
+                    po::store(po::parse_config_file(ifs, description), varMap);
+
+            }
+
+            if (!varMap.count("input")) {
                 std::cout << "Input files list is not set" << std::endl;
                 return EXIT_SUCCESS;
             }
 
-            po::notify(variables);
+            po::notify(varMap);
 
         }
 
@@ -77,10 +94,10 @@ int main(int argc, char **argv) {
         }
 
         mergeNcFiles(
-                variables["variable"].as<std::string>(),
-                variables["size"].as<float>(),
-                variables["output"].as<std::string>(),
-                variables["input"].as<std::vector<std::string>>());
+                varMap["variable"].as<std::string>(),
+                varMap["size"].as<float>(),
+                varMap["output"].as<std::string>(),
+                varMap["input"].as<std::vector<std::string>>());
 
     }
 
