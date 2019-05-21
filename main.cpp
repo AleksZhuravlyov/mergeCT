@@ -27,9 +27,13 @@ int main(int argc, char **argv) {
 
                 ("version,v", "Display version")
 
-                ("dimension,d",
+                ("dimension,dim",
                  po::value<std::string>()->default_value("tomo_zdim"),
                  "Record dimension name")
+
+                ("variable,var",
+                 po::value<std::string>()->default_value("tomo"),
+                 "Variable name")
 
                 ("size,s",
                  po::value<float>()->default_value(3.600846E-5),
@@ -80,6 +84,7 @@ int main(int argc, char **argv) {
         }
 
         mergeNcFiles(variables["dimension"].as<std::string>(),
+                     variables["variable"].as<std::string>(),
                      variables["size"].as<float>(),
                      variables["output"].as<std::string>(),
                      variables["input"].as<std::vector<std::string>>());
