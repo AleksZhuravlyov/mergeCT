@@ -5,12 +5,6 @@
 
 #include <mergeNcFiles.h>
 
-namespace {
-    const size_t SUCCESS = 0;
-    const size_t ERROR_IN_COMMAND_LINE = 1;
-    const size_t ERROR_UNHANDLED_EXCEPTION = 2;
-}
-
 namespace po = boost::program_options;
 
 const std::string VERSION = "1.0";
@@ -26,10 +20,6 @@ int main(int argc, char **argv) {
                 ("help,h", "Display help message")
 
                 ("version,v", "Display version")
-
-                ("dimension,dim",
-                 po::value<std::string>()->default_value("tomo_zdim"),
-                 "Record dimension name")
 
                 ("variable,var",
                  po::value<std::string>()->default_value("tomo"),
@@ -60,17 +50,20 @@ int main(int argc, char **argv) {
                       variables);
 
             if (variables.count("help")) {
-                std::cout << "Utility name is MergeCT." << std::endl
+                std::cout << "The utility name is MergeCT." << std::endl
                           << "Functionality is "
                           << "merging raw microCT UNSW nc files." << std::endl
+                          << "Utility renames dimensions as"
+                          << " lvl(z), ltd(y), lng(x)." << std::endl
+                          << "Record (merge) dimension is lvl(z)." << std::endl
                           << description;
-                return SUCCESS;
+                return EXIT_SUCCESS;
             } else if (variables.count("version")) {
                 std::cout << "MergeCT version is " << VERSION << std::endl;
-                return SUCCESS;
+                return EXIT_SUCCESS;
             } else if (!variables.count("input")) {
                 std::cout << "Input files list is not set" << std::endl;
-                return SUCCESS;
+                return EXIT_SUCCESS;
             }
 
             po::notify(variables);
@@ -80,24 +73,24 @@ int main(int argc, char **argv) {
         catch (po::error &e) {
             std::cerr << "ERROR: " << e.what() << std::endl << std::endl;
             std::cerr << description << std::endl;
-            return ERROR_IN_COMMAND_LINE;
+            return EXIT_FAILURE;
         }
 
-        mergeNcFiles(variables["dimension"].as<std::string>(),
-                     variables["variable"].as<std::string>(),
-                     variables["size"].as<float>(),
-                     variables["output"].as<std::string>(),
-                     variables["input"].as<std::vector<std::string>>());
+        mergeNcFiles(
+                variables["variable"].as<std::string>(),
+                variables["size"].as<float>(),
+                variables["output"].as<std::string>(),
+                variables["input"].as<std::vector<std::string>>());
 
     }
 
     catch (std::exception &e) {
         std::cerr << "Unhandled Exception reached the top of main: "
                   << e.what() << ", application will now exit" << std::endl;
-        return ERROR_UNHANDLED_EXCEPTION;
+        return EXIT_FAILURE;
 
     }
 
-    return SUCCESS;
+    return EXIT_SUCCESS;
 
 }
