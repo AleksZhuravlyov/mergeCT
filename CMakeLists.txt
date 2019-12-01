@@ -6,9 +6,10 @@ set(POJECT_NAME mergeCT)
 
 project(${POJECT_NAME})
 
+find_package(netCDF)
+
 set(SOURCE_CODE main.cpp mergeNcFiles.cpp mergeNcFiles.h)
 
-include_directories(/usr/local/Cellar/netcdf/4.6.3_1/include)
 include_directories(.)
 
 find_package(Boost COMPONENTS program_options REQUIRED)
